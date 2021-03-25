@@ -1,0 +1,76 @@
+WHat is the purpose of these tests, what do we get from it:
+1. Direct results without visiting the monitor
+2. Indepth analysis
+s3. Able to be semi automated 
+
+Logic Apps are conducive to testing, but designing with testing in mind is key.
+
+The apparent lack of the static results option in the designer for v2 stymies more in-depth analysis
+Setting the attribute in the code is overwritten when saving from the designer, and appears not to do anything.
+With static results, the headers and status are available, rather than just the status code.
+
+Response codes can be added as runAfter actions to the action being tested, with branching logic on passing and failing.
+Additionally, a running collection of attributes about the run can be assembled in this way, by creating a variable at the start of the workflow, and adding data to it, rather than sending a response.
+Responding with the variable as the body at the end of the run.
+
+Testing can be done with JUnit, asserting specific status codes based on the message sent.
+
+With v1 a Diagnostics Event Hub can be streamed to, in order to generate run logs.
+Listening to these logs can be used to determine the workflow execution path post-hoc.
+It is unclear if this is possible with v2 yet, but it does not seem to be.
+
+Using the Azure SDK, there is a method (ListAsync) to return Workflow Run Items, these items can be tested against also. 
+
+Using Postman or node with both v1 and v2 for testing with a specified message can return a body. 
+This body can be configured to contain data produced through execution of the app (variables, JSON data, etc.).
+
+Using a predefined body, a test can assert for specific data. E.g. sending a value, and checking to see if it has been multiplied when the product is returned.
+
+@startuml
+    skinparam backgroundColor #FFFFFF
+    skinparam handwritten false
+    collections Config
+    entity UnitTestManager
+    entity LogicManagementClient
+    entity CredentialsGatherer
+    entity GenerateURL
+    entity ExecuteLogicApp
+    Config -> "UnitTestManager" : SubscriptionID, TenantID, WebApplicationID, Secret
+    UnitTestManager -> "LogicManagementClient" : SubscriptionID
+    UnitTestManager -> "UnitTestManager" : LogicAppName, ResourceGroupName, RunID
+    LogicManagementClient -> "CredentialsGatherer" : TenantID,  Secret
+    UnitTestManager -> "GenerateURL" : LogicAppName, TriggerName
+    UnitTestManager -> "ExecuteLogicApp" : TriggerName, MessageContent
+    CredentialsGatherer -> "UnitTestManager" : PackagedAzureCredentials
+    ExecuteLogicApp -> "UnitTestManager" : ResultString
+@endumls
+
+/// how to mock results?
+-seems unavailable for v2
+-static results for v1
+
+// in the event of deployment, how to deploy, how to tear down
+-Node.js web app in Azure?
+
+// v2 limitation notes
+-mocking results doesn't seem possible
+
+// can we run the container locally /dev ops/ github actions/ to run the tests without deployment
+-workflow with single action containing the JS code?
+-github actions for javascript
+-node can run it directly
+
+// how to mitigate multiple changes simeltaneously 
+-
+
+
+// second workflow recieves body of first -> not limited -> easy deployment
+-possible work around in the event that we use a workflow
+
+// can tests be maintained, unforseen consequences 
+-changing the names of workflow items will need to be reflected in the tests
+-changing the flow should only minimally effect the test. 
+
+// next steps : azure SDK 
+-queried workflows with azure SDK
+
